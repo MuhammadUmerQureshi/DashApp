@@ -1,33 +1,42 @@
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Initializing server 'saudi-location-intelligence'
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
-2025-07-21 23:08:27 - tools.auth_tools - INFO - Registering authentication tools with MCP server
-2025-07-21 23:08:27 - tools.geospatial - INFO - Registering geospatial tools with MCP server
-2025-07-21 23:08:27 - tools.natural_language_hub_analyzer - INFO - Registering natural language hub analyzer tool with MCP server
-2025-07-21 23:08:27 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Adding resource
-2025-07-21 23:08:27 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Adding resource
-2025-07-21 23:08:27 - mcp_server - INFO - 🇸🇦 Saudi Location Intelligence MCP Server
-2025-07-21 23:08:27 - mcp_server - INFO - 📱 Starting stdio transport (compatible with Claude Desktop)
-2025-07-21 23:08:27 - mcp_server - INFO - Session manager initialized with base path: F:\Upwork Projects\Abdullah\backend22\tool_bridge_mcp_server\sessions
-2025-07-21 23:08:27 - mcp_server - INFO - Effective data manager initialized
-2025-07-21 23:08:27 - mcp_server - INFO - 🚀 Saudi Location Intelligence MCP Server starting...
-2025-07-21 23:08:27 - mcp_server - INFO - Background session cleanup task started with HandleManager.
-2025-07-21 23:08:27 - mcp_server - INFO - Starting automated cleanup cycle...
-2025-07-21 23:08:27 - mcp_server - INFO - CLEANUP: Starting cleanup of sessions older than 8 hours
-2025-07-21 23:08:27 - mcp_server - INFO - CLEANUP: Completed - {'cleaned': 0, 'freed_mb': 0.0, 'errors': []}
-2025-07-21 23:08:27 - mcp_server - INFO - CLEANUP: Starting cleanup of sessions larger than 100MB
-2025-07-21 23:08:27 - mcp_server - INFO - CLEANUP: Completed large session cleanup - {'cleaned': 0, 'freed_mb': 0.0, 'errors': []}
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x0000019B7F3F3750>
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
-2025-07-21 23:08:27 - mcp.server.lowlevel.server - DEBUG - Response sent
-2025-07-21 23:08:27 - mcp_server - INFO - Cleanup completed: No sessions removed. Storage stats: {'total_sessions': 2, 'total_size_mb': 0.46, 'total_files': 18, 'largest_session_mb': 0.45, 'oldest_session': datetime.datetime(2025, 7, 21, 20, 1, 38, 275860), 'newest_session': datetime.datetime(2025, 7, 21, 22, 44, 26, 719588)}
-2025-07-21 23:08:27 - mcp_server - INFO - 🛑 Saudi Location Intelligence MCP Server shutting down...
-2025-07-21 23:08:27 - mcp_server - INFO - Cancelling background cleanup task...
-2025-07-21 23:08:27 - mcp_server - INFO - Background session cleanup task cancelled.
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Initializing server 'saudi-location-intelligence'
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2025-07-22 19:57:10 - tools.auth_tools - INFO - Registering authentication tools with MCP server
+2025-07-22 19:57:10 - tools.geospatial - INFO - Registering geospatial tools with MCP server
+2025-07-22 19:57:10 - tools.natural_language_hub_analyzer - INFO - Registering natural language hub analyzer tool with MCP server
+2025-07-22 19:57:10 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Adding resource
+2025-07-22 19:57:10 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Adding resource
+2025-07-22 19:57:10 - mcp_server - INFO - 🇸🇦 Saudi Location Intelligence MCP Server
+2025-07-22 19:57:10 - mcp_server - INFO - 📱 Starting stdio transport (compatible with Claude Desktop)
+2025-07-22 19:57:10 - mcp_server - INFO - Session manager initialized with base path: F:\Upwork Projects\Abdullah\backend22\tool_bridge_mcp_server\sessions
+2025-07-22 19:57:10 - mcp_server - INFO - Effective data manager initialized
+2025-07-22 19:57:10 - mcp_server - INFO - 🚀 Saudi Location Intelligence MCP Server starting...
+2025-07-22 19:57:10 - mcp_server - INFO - Background session cleanup task started with HandleManager.
+2025-07-22 19:57:10 - mcp_server - INFO - Starting automated cleanup cycle...
+2025-07-22 19:57:10 - mcp_server - INFO - CLEANUP: Starting cleanup of sessions older than 8 hours
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x000001AB6C0A4050>
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type CallToolRequest
+2025-07-22 19:57:10 - mcp_server - INFO - No session in memory, scanning disk for valid sessions...
+2025-07-22 19:57:10 - mcp_server - INFO - 🎯 Session 6ee75a8a logging started
+2025-07-22 19:57:10 - mcp_server - INFO - Loaded session from disk: 6ee75a8a
+2025-07-22 19:57:10 - mcp_server - INFO - READ: Loading data from handle: territory_optimization_riyadh_20250722_195708_6ee75a8a.json
+2025-07-22 19:57:10 - mcp_server - INFO - CLEANUP: Completed - {'cleaned': 0, 'freed_mb': 0.0, 'errors': []}
+2025-07-22 19:57:10 - mcp_server - INFO - CLEANUP: Starting cleanup of sessions larger than 100MB
+2025-07-22 19:57:10 - mcp_server - INFO - CLEANUP: Completed large session cleanup - {'cleaned': 0, 'freed_mb': 0.0, 'errors': []}
+2025-07-22 19:57:10 - mcp_server - INFO - Cleanup completed: No sessions removed. Storage stats: {'total_sessions': 1, 'total_size_mb': 0.22, 'total_files': 7, 'largest_session_mb': 0.22, 'oldest_session': datetime.datetime(2025, 7, 22, 19, 57, 8, 222137), 'newest_session': datetime.datetime(2025, 7, 22, 19, 57, 8, 222137)}
+2025-07-22 19:57:10 - mcp_server - INFO - READ: Successfully loaded data from territory_optimization_riyadh_20250722_195708_6ee75a8a.json
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x000001AB6BF93750>
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2025-07-22 19:57:10 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-07-22 19:57:10 - mcp_server - INFO - 🛑 Saudi Location Intelligence MCP Server shutting down...
+2025-07-22 19:57:10 - mcp_server - INFO - Cancelling background cleanup task...
+2025-07-22 19:57:10 - mcp_server - INFO - Background session cleanup task cancelled.
