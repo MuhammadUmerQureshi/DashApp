@@ -62,17 +62,6 @@ conversation_history = []
 #                         isDragging = false;
 #                         document.body.style.cursor = 'default';
 #                     });
-                    
-#                     // Hover effect
-#                     resizer.addEventListener('mouseenter', function() {
-#                         resizer.style.backgroundColor = '#007bff';
-#                     });
-                    
-#                     resizer.addEventListener('mouseleave', function() {
-#                         if (!isDragging) {
-#                             resizer.style.backgroundColor = '#dee2e6';
-#                         }
-#                     });
 #                 }
 #             });
 #         </script>
@@ -88,47 +77,54 @@ conversation_history = []
 # </html>
 # '''
 
-# Define the layout (updated to support left panel reports)
+# Define the app layout
 app.layout = html.Div([
     dbc.Row([
-        # Left column (70% width) - Report display area
-        dbc.Col([
-            html.Div(
-                id="left-column-content",
-                children=[
-                    html.Div([
-                        html.H5("📊 Territory Reports", style={'margin-bottom': '20px', 'color': '#495057'}),
-                        html.P("Generated reports will appear here automatically when territory analysis is completed.", 
-                               style={'color': '#6c757d', 'font-style': 'italic'})
-                    ], style={'text-align': 'center', 'margin-top': '50px'})
-                ],
-                style={
-                    'height': '100vh',
-                    'overflow-y': 'auto',
-                    'padding': '20px',
-                    'background-color': '#f8f9fa'
-                }
-            )
-        ], id="left-column", width=8),
-        
-        # Right column (30% width) - Chat interface (unchanged)
+        # Left column - can be used for other content or kept empty
         dbc.Col([
             html.Div([
-                # Header
-                html.Div([
-                    html.H4("AI Assistant", style={'margin': '0', 'text-align': 'center'}),
-                ], style={'margin-bottom': '20px'}),
+                html.H5("Chat Dashboard", style={'margin-bottom': '20px', 'color': '#495057'}),
+                html.P("Welcome to the location intelligence chat interface.", 
+                      style={'color': '#6c757d'}),
+                html.Hr(),
+                html.P("Ask questions about:", style={'font-weight': 'bold', 'margin-bottom': '10px'}),
+                html.Ul([
+                    html.Li("Territory analysis"),
+                    html.Li("Location intelligence"),
+                    html.Li("Market research"),
+                    html.Li("Demographic data")
+                ], style={'color': '#6c757d'})
+            ], id="left-column-content", style={
+                'height': '100vh',
+                'padding': '20px',
+                'background-color': '#f8f9fa',
+                'overflow-y': 'auto'
+            })
+        ], id="left-column", width=8),
+        
+        # Right column - Chat interface
+        dbc.Col([
+            html.Div([
+                # Chat header
+                html.H6("Chat Assistant", style={
+                    'text-align': 'center',
+                    'margin-bottom': '20px',
+                    'padding': '10px',
+                    'background-color': '#007bff',
+                    'color': 'white',
+                    'border-radius': '10px'
+                }),
                 
-                # Results area (scrollable)
+                # Conversation area (scrollable)
                 html.Div(
                     id="conversation-div",
                     children=[],
                     style={
-                        'height': 'calc(100vh - 200px)',
+                        'height': '85vh',
                         'overflow-y': 'auto',
-                        'padding': '15px',
                         'border': '1px solid #dee2e6',
-                        'border-radius': '5px',
+                        'border-radius': '10px',
+                        'padding': '15px',
                         'background-color': 'white',
                         'margin-bottom': '15px',
                         'display': 'flex',
@@ -156,14 +152,14 @@ app.layout = html.Div([
                 ], style={'position': 'sticky', 'bottom': '0'})
             ], style={
                 'height': '100vh',
-                'padding': '20px',
+                'padding': '20px 20px 0 20px',
                 'display': 'flex',
                 'flex-direction': 'column'
             })
         ], id="right-column", width=4)
     ], style={'margin': '0', 'height': '100vh'}),
     
-    # Floating toggle button (unchanged)
+    # Floating toggle button
     dbc.Button(
         "−",
         id="minimize-button",
@@ -189,71 +185,10 @@ app.layout = html.Div([
     )
 ], style={'height': '100vh', 'overflow': 'hidden'})
 
-# Helper function to extract report handle from agent response
-def extract_report_handle(agent_response: str) -> str:
-    """Extract report data handle from agent response"""
-    try:
-        # Look for pattern: **Report Data Handle**: `handle_name`
-        handle_pattern = r'Report Data Handle.*?`([^`]+)`'
-        match = re.search(handle_pattern, agent_response)
-        if match:
-            return match.group(1)
-        return None
-    except Exception as e:
-        print(f"Error extracting report handle: {e}")
-        return None
-
-# Helper function to fetch report content using MCP
-def fetch_report_content(report_handle: str) -> str:
-    """Fetch markdown report content from handle using MCP client"""
-    try:
-        from report_agent import SimpleMCPClient
-        
-        async def get_report_data():
-            client = SimpleMCPClient()
-            await client.connect()
-            try:
-                # Create a message to use get_data_from_handle tool
-                messages = [HumanMessage(content=f"Get data from handle: {report_handle}")]
-                
-                # Invoke the agent with the get data request
-                response = await client.agent.ainvoke({"messages": messages})
-                
-                # Extract the markdown content from the response
-                if isinstance(response, dict) and 'messages' in response:
-                    messages = response['messages']
-                    for message in reversed(messages):
-                        if hasattr(message, '__class__') and 'AI' in str(message.__class__):
-                            if hasattr(message, 'content') and message.content:
-                                # Parse JSON content from the response
-                                content = message.content
-                                # Look for JSON content between ```json``` blocks
-                                json_match = re.search(r'```json\n(.*?)\n```', content, re.DOTALL)
-                                if json_match:
-                                    import json
-                                    try:
-                                        data = json.loads(json_match.group(1))
-                                        return data.get('markdown_content', 'No markdown content found')
-                                    except json.JSONDecodeError:
-                                        pass
-                                # Fallback to raw content
-                                return content
-                
-                return "Error: Could not extract report content"
-                
-            finally:
-                if hasattr(client, 'client') and client.client:
-                    await client.client.close()
-        
-        return asyncio.run(get_report_data())
-        
-    except Exception as e:
-        return f"Error loading report: {str(e)}"
-
 # Initialize resizer without callback - use a different approach
 # The resizer will be initialized automatically when the page loads via the JavaScript
 
-# Callback for minimize/expand functionality (unchanged)
+# Callback for minimize/expand functionality
 @app.callback(
     [Output('left-column', 'width'),
      Output('right-column', 'width'),
@@ -266,18 +201,16 @@ def toggle_right_panel(n_clicks):
     else:  # Even clicks = expanded
         return 8, 4, "−"   # Normal layout, show minimize button
 
-# 🔥 MODIFIED: Main callback function with report display support
+# Simplified main callback function for chat only
 @app.callback(
     [Output('conversation-div', 'children'),
-     Output('query-input', 'value'),
-     Output('left-column-content', 'children')],  # 🔥 Added left panel output
+     Output('query-input', 'value')],
     [Input('send-button', 'n_clicks'),
      Input('query-input', 'n_submit')],
     [State('query-input', 'value'),
-     State('conversation-div', 'children'),
-     State('left-column-content', 'children')]  # 🔥 Added left panel state
+     State('conversation-div', 'children')]
 )
-def process_query(n_clicks, n_submit, query, current_conversation, current_left_content):
+def process_query(n_clicks, n_submit, query, current_conversation):
     if (n_clicks > 0 or n_submit) and query and query.strip():
         try:
             # Add user message to conversation
@@ -340,45 +273,7 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
             
             updated_conversation = [agent_message, user_message] + current_conversation
             
-            # 🔥 NEW: Check for report handle and update left panel
-            left_panel_content = current_left_content  # Default to current content
-            report_handle = extract_report_handle(agent_response)
-            print(f"Extracted report handle: {report_handle}")
-            if report_handle:
-                # Fetch the markdown report content
-                try:
-                    markdown_content = fetch_report_content(report_handle)
-                    
-                    # Create the report display
-                    left_panel_content = [
-                        html.Div([
-                            html.H5(f"📊 Territory Analysis Report", 
-                                   style={'margin-bottom': '20px', 'color': '#495057', 'border-bottom': '2px solid #007bff', 'padding-bottom': '10px'}),
-                            html.Div([
-                                html.Small(f"Report Handle: {report_handle}", 
-                                         style={'color': '#6c757d', 'font-style': 'italic'})
-                            ], style={'margin-bottom': '20px'}),
-                            dcc.Markdown(
-                                markdown_content,
-                                style={
-                                    'background-color': 'white',
-                                    'padding': '20px',
-                                    'border-radius': '8px',
-                                    'box-shadow': '0 2px 4px rgba(0,0,0,0.1)'
-                                }
-                            )
-                        ])
-                    ]
-                except Exception as e:
-                    left_panel_content = [
-                        html.Div([
-                            html.H5("❌ Error Loading Report", style={'color': '#dc3545'}),
-                            html.P(f"Could not load report from handle: {report_handle}"),
-                            html.P(f"Error: {str(e)}", style={'color': '#6c757d', 'font-size': '0.9em'})
-                        ])
-                    ]
-            
-            return updated_conversation, "", left_panel_content  # 🔥 Return updated left panel
+            return updated_conversation, ""
             
         except Exception as e:
             # Add error message to conversation
@@ -415,10 +310,10 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
             
             updated_conversation = [error_message, user_message] + current_conversation
             
-            return updated_conversation, "", current_left_content  # Keep current left panel content on error
+            return updated_conversation, ""
     
     # Return current state if no valid input
-    return current_conversation or [], query or "", current_left_content
+    return current_conversation or [], query or ""
 
 if __name__ == '__main__':
     app.run(debug=True)
