@@ -18,6 +18,9 @@ class AgentConfig:
     # MCP Server path
     MCP_SERVER_PATH = PROJECT_ROOT / "tool_bridge_mcp_server" / "mcp_server.py"
     
+    # Reports directory path
+    REPORTS_DIR = PROJECT_ROOT / "reports"
+    
     # ===== MODEL SETTINGS =====
     DEFAULT_MODEL = "gpt-4o"
     DEFAULT_TEMPERATURE = 0
@@ -71,6 +74,14 @@ class AgentConfig:
         "executive": "High-level business insights and strategic recommendations"
     }
     
+    # ===== REPORT SETTINGS =====
+    SUPPORTED_REPORT_FORMATS = ['.md', '.html']
+    DEFAULT_REPORT_TYPE = 'md'
+    REPORT_FILE_PATTERNS = {
+        'md': '*.md',
+        'html': '*.html'
+    }
+    
     @classmethod
     def get_mcp_config(cls) -> dict:
         """Get MCP client configuration"""
@@ -99,8 +110,26 @@ class AgentConfig:
                 print(f"❌ Missing required path: {path}")
                 return False
         
+        # Create reports directory if it doesn't exist
+        cls.REPORTS_DIR.mkdir(exist_ok=True)
+        
         print("✅ All required paths validated successfully")
         return True
+    
+    @classmethod
+    def get_reports_path(cls) -> str:
+        """Get the reports directory path as string"""
+        return str(cls.REPORTS_DIR)
+    
+    @classmethod
+    def get_report_file_path(cls, filename: str) -> str:
+        """Get full path for a report file"""
+        return str(cls.REPORTS_DIR / filename)
+    
+    @classmethod
+    def is_valid_report_file(cls, filename: str) -> bool:
+        """Check if filename has a valid report format"""
+        return any(filename.endswith(ext) for ext in cls.SUPPORTED_REPORT_FORMATS)
     
     @classmethod
     def get_example_queries(cls) -> list:

@@ -126,6 +126,45 @@ class SimpleMCPClient:
         # Extract the final AI response
         return self._extract_final_response(response)
     
+    async def analyze_territories_with_file_handle(self, user_query: str, thread_id: str = None) -> dict:
+        """
+        Analyze territories and return both response and file handle for Dash app
+        
+        Args:
+            user_query: User's request for territory analysis
+            thread_id: Thread identifier for conversation continuity (optional)
+        
+        Returns:
+            Dictionary with 'response' and 'raw_content' keys
+        """
+        if not self.agent:
+            raise ValueError("Agent not connected. Please call connect() first.")
+        
+        # Use provided thread_id or default
+        current_thread_id = thread_id or self.default_thread_id
+        
+        # Create configuration with thread_id for memory
+        config = {"configurable": {"thread_id": current_thread_id}}
+        
+        # Create messages for the LLM
+        messages = [
+            SystemMessage(content=TERRITORY_OPTIMIZATION_PROMPT),
+            HumanMessage(content=user_query)
+        ]
+        
+        print(f"🔄 Processing query: {user_query[:100]}...")
+        print(f"🧠 Using thread: {current_thread_id}")
+        print(f"🤖 Using {self.model} with temperature {self.temperature}")
+        
+        # Let the LLM orchestrate tools via MCP with memory
+        response = await self.agent.ainvoke({"messages": messages}, config=config)
+        
+        # Return both formatted response and raw content for file handle extraction
+        return {
+            'response': self._extract_final_response(response),
+            'raw_content': self._extract_file_handle_from_response(response)
+        }
+    
     def _extract_final_response(self, response) -> str:
         """Extract the final AI response from the agent output"""
         if isinstance(response, dict) and 'messages' in response:
@@ -140,6 +179,23 @@ class SimpleMCPClient:
             return "✅ Territory analysis completed! Reports have been generated and saved by the system."
         else:
             return "✅ Analysis completed successfully."
+    
+    def _extract_file_handle_from_response(self, response) -> str:
+        """
+        Extract file handle from response for Dash app integration
+        Returns the response with file handle information for parsing
+        """
+        if isinstance(response, dict) and 'messages' in response:
+            messages = response['messages']
+            
+            # Look for the last AI message with content
+            for message in reversed(messages):
+                if hasattr(message, '__class__') and 'AI' in str(message.__class__):
+                    if hasattr(message, 'content') and message.content and message.content.strip():
+                        # Return the full content for file handle parsing
+                        return message.content
+        
+        return response
     
     def get_conversation_history(self, thread_id: str = None) -> dict:
         """Get conversation history for a specific thread"""

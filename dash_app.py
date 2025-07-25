@@ -2,8 +2,11 @@ import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 import asyncio
-import re
 from langchain_core.messages import HumanMessage
+
+# Import our custom modules
+from report_handler import report_handler
+from report_display import report_display
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -44,11 +47,7 @@ app.layout = html.Div([
             html.Div(
                 id="left-column-content",
                 children=[
-                    html.Div([
-                        html.H5("📊 Territory Reports", style={'margin-bottom': '20px', 'color': '#495057'}),
-                        html.P("Generated reports will appear here automatically when territory analysis is completed.", 
-                               style={'color': '#6c757d', 'font-style': 'italic'})
-                    ], style={'text-align': 'center', 'margin-top': '50px'})
+                    report_display.create_report_layout()
                 ],
                 style={
                     'height': '100vh',
@@ -147,75 +146,6 @@ app.layout = html.Div([
     )
 ], style={'height': '100vh', 'overflow': 'hidden'})
 
-# Helper function to extract report handle from agent response
-def extract_report_handle(agent_response: str) -> str:
-    """Extract report data handle from agent response"""
-    try:
-        # Look for pattern: **Report Data Handle**: `handle_name`
-        handle_pattern = r'Report Data Handle.*?`([^`]+)`'
-        match = re.search(handle_pattern, agent_response)
-        if match:
-            return match.group(1)
-        return None
-    except Exception as e:
-        print(f"Error extracting report handle: {e}")
-        return None
-
-# Helper function to fetch report content using MCP with memory
-def fetch_report_content(report_handle: str) -> str:
-    """Fetch markdown report content from handle using persistent MCP client"""
-    try:
-        async def get_report_data():
-            client = await ensure_client_connected()
-            if not client:
-                return "Error: Could not connect to MCP client"
-            
-            try:
-                # Create a message to use get_data_from_handle tool
-                messages = [HumanMessage(content=f"Get data from handle: {report_handle}")]
-                
-                # Use the same thread for consistency
-                config = {"configurable": {"thread_id": DASH_THREAD_ID}}
-                
-                # Invoke the agent with the get data request
-                response = await client.agent.ainvoke({"messages": messages}, config=config)
-                
-                # Extract the markdown content from the response
-                if isinstance(response, dict) and 'messages' in response:
-                    messages = response['messages']
-                    for message in reversed(messages):
-                        if hasattr(message, '__class__') and 'AI' in str(message.__class__):
-                            if hasattr(message, 'content') and message.content:
-                                # Parse JSON content from the response
-                                content = message.content
-                                # Look for JSON content between ```json``` blocks
-                                json_match = re.search(r'```json\n(.*?)\n```', content, re.DOTALL)
-                                if json_match:
-                                    import json
-                                    try:
-                                        data = json.loads(json_match.group(1))
-                                        return data.get('markdown_content', 'No markdown content found')
-                                    except json.JSONDecodeError:
-                                        pass
-                                # Fallback to raw content
-                                return content
-                
-                return "Error: Could not extract report content"
-                
-            except Exception as e:
-                return f"Error loading report: {str(e)}"
-        
-        # Create new event loop if needed
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        return loop.run_until_complete(get_report_data())
-        
-    except Exception as e:
-        return f"Error loading report: {str(e)}"
 
 # Callback for minimize/expand functionality (unchanged)
 @app.callback(
@@ -234,14 +164,14 @@ def toggle_right_panel(n_clicks):
 @app.callback(
     [Output('conversation-div', 'children'),
      Output('query-input', 'value'),
-     Output('left-column-content', 'children')],
+     Output('report-content', 'children'),
+     Output('report-status', 'children')],
     [Input('send-button', 'n_clicks'),
      Input('query-input', 'n_submit')],
     [State('query-input', 'value'),
-     State('conversation-div', 'children'),
-     State('left-column-content', 'children')]
+     State('conversation-div', 'children')]
 )
-def process_query(n_clicks, n_submit, query, current_conversation, current_left_content):
+def process_query(n_clicks, n_submit, query, current_conversation):
     if (n_clicks and n_clicks > 0) or n_submit:
         if query and query.strip():
             try:
@@ -260,18 +190,19 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
                     })
                 ], style={'margin-bottom': '15px'})
                 
-                # Process MCP client query with memory
+                # Process MCP client query with memory and file handle support
                 async def run_query_with_memory():
                     client = await ensure_client_connected()
                     if not client:
-                        return "Error: Could not connect to MCP client"
+                        return {"response": "Error: Could not connect to MCP client", "raw_content": ""}
                     
                     try:
                         # Use persistent thread ID for conversation continuity
-                        response = await client.analyze_territories(query, thread_id=DASH_THREAD_ID)
-                        return response
+                        # Use the new method that returns both response and raw content
+                        result = await client.analyze_territories_with_file_handle(query, thread_id=DASH_THREAD_ID)
+                        return result
                     except Exception as e:
-                        return f"Error processing query: {str(e)}"
+                        return {"response": f"Error processing query: {str(e)}", "raw_content": ""}
                 
                 # Create new event loop if needed
                 try:
@@ -282,8 +213,13 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
                 
                 result = loop.run_until_complete(run_query_with_memory())
                 
-                # Format agent response
-                agent_response = str(result)
+                # Extract response and raw content
+                if isinstance(result, dict):
+                    agent_response = str(result.get('response', ''))
+                    raw_content = result.get('raw_content', '')
+                else:
+                    agent_response = str(result)
+                    raw_content = str(result)
                 
                 # Add agent message to conversation
                 agent_message = html.Div([
@@ -306,50 +242,31 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
                 
                 updated_conversation = [agent_message, user_message] + current_conversation
                 
-                # Check for report handle and update left panel
-                left_panel_content = current_left_content  # Default to current content
-                report_handle = extract_report_handle(agent_response)
-                print(f"Extracted report handle: {report_handle}")
+                # Handle report display
+                report_content = report_display._create_empty_state()
+                report_status = report_display.create_report_status_indicator('empty')
                 
-                if report_handle:
-                    # Fetch the markdown report content
-                    try:
-                        markdown_content = fetch_report_content(report_handle)
-                        
-                        # Create the report display
-                        left_panel_content = [
-                            html.Div([
-                                html.H5(f"📊 Territory Analysis Report", 
-                                       style={'margin-bottom': '20px', 'color': '#495057', 
-                                             'border-bottom': '2px solid #007bff', 'padding-bottom': '10px'}),
-                                html.Div([
-                                    html.Small(f"Report Handle: {report_handle}", 
-                                             style={'color': '#6c757d', 'font-style': 'italic'}),
-                                    html.Br(),
-                                    html.Small(f"🧠 Conversation Memory: Active", 
-                                             style={'color': '#28a745', 'font-weight': 'bold'})
-                                ], style={'margin-bottom': '20px'}),
-                                dcc.Markdown(
-                                    markdown_content,
-                                    style={
-                                        'background-color': 'white',
-                                        'padding': '20px',
-                                        'border-radius': '8px',
-                                        'box-shadow': '0 2px 4px rgba(0,0,0,0.1)'
-                                    }
-                                )
-                            ])
-                        ]
-                    except Exception as e:
-                        left_panel_content = [
-                            html.Div([
-                                html.H5("❌ Error Loading Report", style={'color': '#dc3545'}),
-                                html.P(f"Could not load report from handle: {report_handle}"),
-                                html.P(f"Error: {str(e)}", style={'color': '#6c757d', 'font-size': '0.9em'})
-                            ])
-                        ]
+                # Try to extract file handle from raw content and display report
+                if raw_content:
+                    print(f"🔍 Processing raw content for file handle extraction...")
+                    file_handle = report_handler.parse_file_handle_from_response(raw_content)
+                    if file_handle:
+                        print(f"📄 Found file handle: {file_handle}")
+                        # Try to read the report
+                        md_content = report_handler.read_md_report(file_handle)
+                        if md_content:
+                            report_content = report_display.format_markdown_for_dash(md_content)
+                            # Get report metadata
+                            metadata = report_handler.extract_report_metadata(file_handle)
+                            report_status = report_display.create_report_status_indicator('loaded', metadata)
+                            print(f"✅ Report loaded and displayed")
+                        else:
+                            print(f"❌ Could not read report from handle: {file_handle}")
+                            report_status = report_display.create_report_status_indicator('error')
+                    else:
+                        print("ℹ️ No file handle found in response")
                 
-                return updated_conversation, "", left_panel_content
+                return updated_conversation, "", report_content, report_status
                 
             except Exception as e:
                 # Add error message to conversation
@@ -386,10 +303,16 @@ def process_query(n_clicks, n_submit, query, current_conversation, current_left_
                 
                 updated_conversation = [error_message, user_message] + current_conversation
                 
-                return updated_conversation, "", current_left_content
+                # Return error state for report display
+                error_report_content = report_display.create_error_display(str(e))
+                error_report_status = report_display.create_report_status_indicator('error')
+                
+                return updated_conversation, "", error_report_content, error_report_status
     
     # Return current state if no valid input
-    return current_conversation or [], query or "", current_left_content
+    empty_report = report_display._create_empty_state()
+    empty_status = report_display.create_report_status_indicator('empty')
+    return current_conversation or [], query or "", empty_report, empty_status
 
 if __name__ == '__main__':
     app.run(debug=True)
